@@ -1,14 +1,19 @@
 from PyPDF2 import PdfReader, PdfWriter
 from PyPDF2.generic import NameObject, DictionaryObject, NumberObject, FloatObject
+import os
 
-# اسم الملف الأصلي
-input_pdf = "en.pdf"
+print("\n📎 PDF Full Clickable Link Injector\n")
+
+# إدخال البيانات من المستخدم
+input_pdf = input("📄 ادخل مسار ملف PDF الأصلي: ").strip()
+link_url = input("🔗 ادخل الرابط اللي عايز تحطه داخل الملف: ").strip()
+output_dir = input("📁 ادخل مسار المجلد اللي هيتحفظ فيه الملف النهائي: ").strip()
+
+# إنشاء المجلد لو مش موجود
+os.makedirs(output_dir, exist_ok=True)
 
 # اسم الملف النهائي
-output_pdf = r"C:\Users\computer.house\DCIM\en_linked.pdf"  # عدّل حسب مجلد DCIM عندك
-
-# طلب الرابط من المستخدم
-link_url = input("💡 من فضلك ادخل الرابط اللي عايز تحطه داخل الملف: ")
+output_pdf = os.path.join(output_dir, "linked_output.pdf")
 
 # قراءة الملف
 reader = PdfReader(input_pdf)
@@ -17,16 +22,18 @@ writer = PdfWriter()
 for page in reader.pages:
     writer.add_page(page)
 
-    # ابعاد الصفحة
     page_width = float(page.mediabox.width)
     page_height = float(page.mediabox.height)
 
-    # إنشاء annotation يغطي كل الصفحة
+    # إنشاء رابط يغطي الصفحة بالكامل
     link = DictionaryObject()
     link.update({
         NameObject("/Type"): NameObject("/Annot"),
         NameObject("/Subtype"): NameObject("/Link"),
-        NameObject("/Rect"): [FloatObject(0), FloatObject(0), FloatObject(page_width), FloatObject(page_height)],
+        NameObject("/Rect"): [
+            FloatObject(0), FloatObject(0),
+            FloatObject(page_width), FloatObject(page_height)
+        ],
         NameObject("/Border"): [NumberObject(0), NumberObject(0), NumberObject(0)],
         NameObject("/A"): DictionaryObject({
             NameObject("/S"): NameObject("/URI"),
@@ -39,8 +46,9 @@ for page in reader.pages:
     else:
         page[NameObject("/Annots")] = [link]
 
-# حفظ الملف الجديد
+# حفظ الملف
 with open(output_pdf, "wb") as f:
     writer.write(f)
 
-print(f"✅ تم إنشاء الملف مع الرابط داخل كل الصفحة وحفظه في: {output_pdf}")
+print("\n✅ تم إنشاء الملف بنجاح!")
+print(f"📂 مكان الحفظ: {output_pdf}")
